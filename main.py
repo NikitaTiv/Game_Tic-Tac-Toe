@@ -1,72 +1,51 @@
 from random import choice
+from typing import Union
 
 
-def field(dict_user_choice: dict) -> str:
+def field(list_user_choice: list[Union[int, str]]) -> str:
     """Строит поле."""
-    empty_dict = {
-        'A1': ' ', 'B1': ' ', 'C1': ' ', 'A2': ' ',
-        'B2': ' ', 'C2': ' ', 'A3': ' ', 'B3': ' ', 'C3': ' ',
-    }
-
-    for cell, meaning in dict_user_choice.items():
-        if cell in empty_dict:
-            empty_dict[cell] = meaning
-
-    field = '\n   A B C' \
-            '\n   - - -' \
-            '\n1 |{}|{}|{}|'\
-            '\n   - - -' \
-            '\n2 |{}|{}|{}|' \
-            '\n   - - -' \
-            '\n3 |{}|{}|{}|' \
-            '\n   - - -\n'.format(
-                empty_dict['A1'], empty_dict['B1'], empty_dict['C1'],
-                empty_dict['A2'], empty_dict['B2'], empty_dict['C2'],
-                empty_dict['A3'], empty_dict['B3'], empty_dict['C3'],
+    field = '\n - - -' \
+            '\n|{}|{}|{}|'\
+            '\n - - -' \
+            '\n|{}|{}|{}|' \
+            '\n - - -' \
+            '\n|{}|{}|{}|' \
+            '\n - - -\n'.format(
+                list_user_choice[0], list_user_choice[1], list_user_choice[2],
+                list_user_choice[3], list_user_choice[4], list_user_choice[5],
+                list_user_choice[6], list_user_choice[7], list_user_choice[8],
             )
 
     return field
 
 
+def choose_user_sign() -> str:
+    """Выбирает кем будет играть игрок."""
+    player_sign = choice(['x', 'o'])
+    print(f'\n\nВы будете играть за {player_sign}')
+
+    return player_sign
+
+
 def record_players_move(
-    type_player: str, move: str, dict_user_choice: dict, list_cell: list,
-) -> dict | None:
+    type_sign: str, move: str, list_user_choice: list[Union[int, str]], list_cell: list[int],
+) -> list[int | str]:
     """Записывает ходы игроков."""
-    if type_player == 'user':
-        dict_user_choice[move] = 'x'
-    if type_player == 'pc':
-        dict_user_choice[move] = 'o'
-    list_cell.remove(move)
+    list_user_choice[int(move)-1] = type_sign
+    del list_cell[int(move)]
 
-    return dict_user_choice
+    return list_user_choice
 
 
-def make_pc_move(list_cell: list) -> str:
-    """Делает ход компьютера."""
-    return choice(list_cell)
-
-
-def result_of_move(dict_user_choice: dict, player_element: str) -> str:
+def result_of_move_bool(list_user_choice: list[Union[int, str]]) -> bool:
     """Проверяет победил ли участник."""
-    list_user_move = [
-        move for move, meaning in dict_user_choice.items() if meaning == player_element
-    ]
-    if 'A1' in list_user_move and 'B2' in list_user_move and 'C3' in list_user_move:
-        return 'win'
-    if 'A3' in list_user_move and 'B2' in list_user_move and 'C1' in list_user_move:
-        return 'win'
-    if 'A1' in list_user_move and 'B1' in list_user_move and 'C1' in list_user_move:
-        return 'win'
-    if 'A2' in list_user_move and 'B2' in list_user_move and 'C2' in list_user_move:
-        return 'win'
-    if 'A3' in list_user_move and 'B3' in list_user_move and 'C3' in list_user_move:
-        return 'win'
-    if 'A1' in list_user_move and 'A2' in list_user_move and 'A3' in list_user_move:
-        return 'win'
-    if 'B1' in list_user_move and 'B2' in list_user_move and 'B3' in list_user_move:
-        return 'win'
-    if 'C1' in list_user_move and 'C2' in list_user_move and 'C3' in list_user_move:
-        return 'win'
+    win_coord = (
+        (0, 1, 2), (3, 4, 5), (6, 7, 8), (0, 3, 6), (1, 4, 7), (2, 5, 8), (0, 4, 8), (2, 4, 6),
+    )
+    for row in win_coord:
+        if list_user_choice[row[0]] == list_user_choice[row[1]] == list_user_choice[row[2]] != ' ':
+            return True
+    return False
 
 
 def announcement(result: str) -> str:
@@ -76,54 +55,72 @@ def announcement(result: str) -> str:
     return f'В этой партии победил {result}'
 
 
+def result_game(winner_or_draw: str, list_user_choice: list[Union[int, str]]) -> bool:
+    """Подводит итоги игры и предалагает сыгать еще."""
+    print(field(list_user_choice))
+    print(announcement(winner_or_draw))
+    question = input('Хотите сыграть еще? (Да/Нет) ')
+    if question.lower() == 'да':
+        return True
+    elif question.lower() == 'нет':
+        return False
+
+
+def choose_pc_sign(player_sign: str) -> str:
+    """Назначает символ компьютеру."""
+    if player_sign == 'x':
+        return 'o'
+    if player_sign == 'o':
+        return 'x'
+
+
+def choose_move(player: str, list_cell: list[Union[int, str]]) -> int:
+    """Просит пользователя сделать ход и делает ход за ПК."""
+    while True:
+        if player == 'игрок':
+            player_move = int(input('Ваш ход: '))
+            if player_move not in list_cell:
+                print('Введите корректную ячейку.')
+                continue
+        if player == 'компьютер':
+            player_move = choice(list_cell)
+            print(f'Ход компьютера {player_move}')
+        break
+    return player_move
+
+
 if __name__ == '__main__':
     active = True
     while active:
-        dict_user_choice = {}
-        list_cell = [
-            'A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3',
-        ]
-        for _ in range(8):
-            print(field(dict_user_choice))
-            user_move = input('Ваш ход: ')
-            if user_move not in list_cell:
-                print('Введите корректное значение.')
-                continue
-            dict_user_choice = record_players_move(
-                'user', user_move, dict_user_choice, list_cell,
+        list_user_choice = [n+1 for n in range(9)]  # список для отрисовки таблицы
+        list_cell = [n+1 for n in range(9)]  # из этого удаляются значения, выбора ходов пк
+        counter = 0
+        player_sign = choose_user_sign()
+        while True:
+            print(list_user_choice)
+            player = 'игрок'
+            if len(list_cell) % 2 == 0:
+                player = 'компьютер'
+            if len(list_cell) < 9:
+                player_sign = choose_pc_sign(player_sign)
+            print(field(list_user_choice))
+            move_crosses = choose_move(player, list_cell)
+            list_user_choice = record_players_move(
+                player_sign, move_crosses, list_user_choice, list_cell,
             )
-            result_user = result_of_move(dict_user_choice, 'x')
-            if result_user == 'win':
-                print(field(dict_user_choice))
-                print(announcement('игрок'))
-                question = input('Хотите сыграть еще? (Да/Нет) ')
-                if question.lower() == 'да':
+            counter += 1
+            result = result_of_move_bool(list_user_choice)
+            if result:
+                continue_game = result_game(player, list_user_choice)
+                if continue_game:
                     break
-                elif question.lower() == 'нет':
+                else:
                     active = False
                     break
-            try:
-                pc_move = make_pc_move(list_cell)
-            except IndexError:
-                print(field(dict_user_choice))
-                print(announcement('draw'))
-                question = input('Хотите сыграть еще? (Да/Нет) ')
-                if question.lower() == 'да':
+            if counter == 9:
+                continue_game = result_game('draw', list_user_choice)
+                if continue_game:
                     break
-                elif question.lower() == 'нет':
-                    active = False
-                    break
-            print(f'- - - - -\nХод компьютера {pc_move}.')
-            dict_user_choice = record_players_move(
-                'pc', pc_move, dict_user_choice, list_cell,
-            )
-            result_pc = result_of_move(dict_user_choice, 'o')
-            if result_pc == 'win':
-                print(field(dict_user_choice))
-                print(announcement('компьютер'))
-                question = input('Хотите сыграть еще? (Да/Нет) ')
-                if question.lower() == 'да':
-                    break
-                elif question.lower() == 'нет':
+                else:
                     active = False
                     break
