@@ -1,8 +1,8 @@
-from random import choice
-from typing import Union
+from random import shuffle, choice
+from enums import TicTacToeSymbol, TicTacToePlayer
 
 
-def field(list_user_choice: list[Union[int, str]]) -> str:
+def field(list_cells: list[str]) -> str:
     """Строит поле."""
     field = '\n - - -' \
             '\n|{}|{}|{}|'\
@@ -11,116 +11,72 @@ def field(list_user_choice: list[Union[int, str]]) -> str:
             '\n - - -' \
             '\n|{}|{}|{}|' \
             '\n - - -\n'.format(
-                list_user_choice[0], list_user_choice[1], list_user_choice[2],
-                list_user_choice[3], list_user_choice[4], list_user_choice[5],
-                list_user_choice[6], list_user_choice[7], list_user_choice[8],
+                list_cells[0], list_cells[1], list_cells[2],
+                list_cells[3], list_cells[4], list_cells[5],
+                list_cells[6], list_cells[7], list_cells[8],
             )
-
     return field
 
 
-def choose_user_sign() -> str:
-    """Выбирает кем будет играть игрок."""
-    player_sign = choice(['x', 'o'])
-    print(f'\n\nВы будете играть за {player_sign}')
-
-    return player_sign
-
-
-def record_players_move(
-    type_sign: str, move: str, list_user_choice: list[Union[int, str]], list_cell: list[int],
-) -> list[int | str]:
-    """Записывает ходы игроков."""
-    list_user_choice[int(move)-1] = type_sign
-    del list_cell[int(move)]
-
-    return list_user_choice
+def choose_user_symbol(symbols: TicTacToeSymbol) -> tuple[str, str]:
+    """Выбирает кем будет играть игрок и компьтер."""
+    player_symbols = list(symbols)
+    shuffle(player_symbols)
+    return player_symbols[0].value, player_symbols[1].value
 
 
-def result_of_move_bool(list_user_choice: list[Union[int, str]]) -> bool:
+def result_of_move_bool(list_cells: list[str]) -> bool:
     """Проверяет победил ли участник."""
     win_coord = (
         (0, 1, 2), (3, 4, 5), (6, 7, 8), (0, 3, 6), (1, 4, 7), (2, 5, 8), (0, 4, 8), (2, 4, 6),
     )
     for row in win_coord:
-        if list_user_choice[row[0]] == list_user_choice[row[1]] == list_user_choice[row[2]] != ' ':
+        if list_cells[row[0]] == list_cells[row[1]] == list_cells[row[2]]:
             return True
     return False
 
 
-def announcement(result: str) -> str:
-    """Обявляет результат."""
-    if result == 'draw':
-        return 'Ничья'
-    return f'В этой партии победил {result}'
-
-
-def result_game(winner_or_draw: str, list_user_choice: list[Union[int, str]]) -> bool:
-    """Подводит итоги игры и предалагает сыгать еще."""
-    print(field(list_user_choice))
-    print(announcement(winner_or_draw))
-    question = input('Хотите сыграть еще? (Да/Нет) ')
-    if question.lower() == 'да':
-        return True
-    elif question.lower() == 'нет':
-        return False
-
-
-def choose_pc_sign(player_sign: str) -> str:
-    """Назначает символ компьютеру."""
-    if player_sign == 'x':
-        return 'o'
-    if player_sign == 'o':
-        return 'x'
-
-
-def choose_move(player: str, list_cell: list[Union[int, str]]) -> int:
-    """Просит пользователя сделать ход и делает ход за ПК."""
+def ask_user_move(list_cells: list[str]) -> str:
+    """Просит у пользователя сделать ход и проверяет его."""
     while True:
-        if player == 'игрок':
-            player_move = int(input('Ваш ход: '))
-            if player_move not in list_cell:
-                print('Введите корректную ячейку.')
-                continue
-        if player == 'компьютер':
-            player_move = choice(list_cell)
-            print(f'Ход компьютера {player_move}')
-        break
+        player_move = input('Ваш ход: ')
+        variants_of_moves = [cell for cell in list_cells if cell.isdigit()]
+        if player_move in variants_of_moves:
+            break
+        else:
+            print('Введите корректную ячейку.')
+            continue
     return player_move
 
 
+def make_pc_move(list_cells: list[str]) -> str:
+    """Делает ход за ПК."""
+    variants_of_moves = [cell for cell in list_cells if cell.isdigit()]
+    pc_move = choice(variants_of_moves)
+    print(f'Ход компьютера {pc_move}')
+    return pc_move
+
+
 if __name__ == '__main__':
-    active = True
-    while active:
-        list_user_choice = [n+1 for n in range(9)]  # список для отрисовки таблицы
-        list_cell = [n+1 for n in range(9)]  # из этого удаляются значения, выбора ходов пк
-        counter = 0
-        player_sign = choose_user_sign()
-        while True:
-            print(list_user_choice)
-            player = 'игрок'
-            if len(list_cell) % 2 == 0:
-                player = 'компьютер'
-            if len(list_cell) < 9:
-                player_sign = choose_pc_sign(player_sign)
-            print(field(list_user_choice))
-            move_crosses = choose_move(player, list_cell)
-            list_user_choice = record_players_move(
-                player_sign, move_crosses, list_user_choice, list_cell,
-            )
-            counter += 1
-            result = result_of_move_bool(list_user_choice)
-            if result:
-                continue_game = result_game(player, list_user_choice)
-                if continue_game:
-                    break
-                else:
-                    active = False
-                    break
-            if counter == 9:
-                continue_game = result_game('draw', list_user_choice)
-                if continue_game:
-                    break
-                else:
-                    active = False
-                    break
+    list_cells = [str(n + 1) for n in range(9)]
+    user_symbol, pc_symbol = choose_user_symbol(TicTacToeSymbol)
+    print(f'Вы играете за {user_symbol}, компьтер за {pc_symbol}')
+    counter = 0
+    while True:
+        print(field(list_cells))
+        player = TicTacToePlayer.User if counter % 2 == 0 else TicTacToePlayer.Compukter
+        player_symbol = user_symbol if counter % 2 == 0 else pc_symbol
+        if player == TicTacToePlayer.User:
+            player_move = ask_user_move(list_cells)
+        if player == TicTacToePlayer.Compukter:
+            player_move = make_pc_move(list_cells)
+        list_cells[int(player_move) - 1] = player_symbol
+        result_game = result_of_move_bool(list_cells)
+        if result_game:
+            print(f'Победил {player.value}')
+            break
+        list_free_cells = [_ for _ in list_cells if _.isdigit()]
+        if not list_free_cells:
+            print('Ничья')
+            break
+        counter += 1
