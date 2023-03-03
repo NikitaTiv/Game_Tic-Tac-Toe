@@ -2,7 +2,7 @@ from random import shuffle, choice
 from enums import TicTacToeSymbol, TicTacToePlayer
 
 
-def field(list_cells: list[str]) -> str:
+def build_field(list_cells: list[str]) -> str:
     """Строит поле."""
     field = '\n - - -' \
             '\n|{}|{}|{}|'\
@@ -18,11 +18,10 @@ def field(list_cells: list[str]) -> str:
     return field
 
 
-def choose_user_symbol(symbols: TicTacToeSymbol) -> tuple[str, str]:
-    """Выбирает кем будет играть игрок и компьтер."""
-    player_symbols = list(symbols)
-    shuffle(player_symbols)
-    return player_symbols[0].value, player_symbols[1].value
+def choose_user_symbol(list_symbols: list[TicTacToeSymbol]) -> tuple[str, str]:
+    """Выбирает каким символом будет играть игрок и компьтер."""
+    shuffle(list_symbols)
+    return list_symbols[0].value, list_symbols[1].value
 
 
 def result_of_move_bool(list_cells: list[str]) -> bool:
@@ -59,11 +58,11 @@ def make_pc_move(list_cells: list[str]) -> str:
 
 if __name__ == '__main__':
     list_cells = [str(n + 1) for n in range(9)]
-    user_symbol, pc_symbol = choose_user_symbol(TicTacToeSymbol)
+    user_symbol, pc_symbol = choose_user_symbol(list(TicTacToeSymbol))
     print(f'Вы играете за {user_symbol}, компьтер за {pc_symbol}')
     counter = 0
     while True:
-        print(field(list_cells))
+        print(build_field(list_cells))
         player = TicTacToePlayer.User if counter % 2 == 0 else TicTacToePlayer.Compukter
         player_symbol = user_symbol if counter % 2 == 0 else pc_symbol
         if player == TicTacToePlayer.User:
